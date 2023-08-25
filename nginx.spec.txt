@@ -1,0 +1,43 @@
+cat nginx.spec
+%define _prefix /usr/local/nginx    //预定义的prefix目录
+%define _logpath /var/log/weblog    //预定义日志目录
+Name: nginx 
+Version: 1.12.1
+Release: 1%{?dist}
+Summary: The Nginx HTTP and reverse proxy server
+Group: Applications/System
+License: GPLv2
+URL: https://nginx.org
+Packager: Atlantis <XXX@XXX.com>
+Vendor: XXX-XXX
+Source0: %{name}-%{version}.tar.gz  //引用的源码文件
+Source1: nginx.conf                 //引用配置文件
+Source2: nginx                      //引用System-V风格的Service服务
+Source3: nginx.logrotate            //引用日志轮转的配置文件
+BuildRoot: %_topdir/BUILDROOT       //虚拟根目录
+Requires: libxslt-devel,openssl-devel,pcre-devel    //所依赖的软件包%description
+NGINX is the heart of the modern web, powering half of the world’s busiest sites and applications. The company's comprehensive application delivery platform combines load balancing, content caching, web serving, security controls, and monitoring in one easy-to-use software package.%prep                               //编译前准备工作，这里指定的就是Setup,有条件也可以指定编译器
+%setup -q%build                              //编译参数，这个看到这里的人基本都懂，没啥讲的，最后一个参数可以使用并行编译: make -j 6
+./configure \--user=nginx \--group=nginx \--prefix=%{_prefix} \--http-log-path=%{_logpath}/access.log \--error-log-path=%{_logpath}/error.log \--pid-path=/var/run/nginx.pid \--with-http_dav_module \--with-http_flv_module \--with-http_realip_module \--with-http_addition_module \--with-http_xslt_module \--with-http_sub_module \--with-http_random_index_module \--with-http_degradation_module \--with-http_secure_link_module \--with-http_gzip_static_module \--with-http_ssl_module \--with-http_stub_status_module \--with-pcre \--with-threads \--with-stream \--with-ld-opt=-Wl,-E
+make %{?_smp_mflags}%install                            //安装步骤
+rm -rf %{buildroot}                 //保证虚拟根的干净
+make install DESTDIR=%{buildroot}   //install 到虚拟根
+%{__install} -p -d -m 0755 %{buildroot}%{_logpath}  //定义一个日志目录并赋予其权限，这个文件会在编译时自动生成，因此要声明
+%{__install} -p -D -m 0644 %{SOURCE1} %{buildroot}%{_prefix}/conf/nginx.conf //复制SOURCE1中的文件到虚拟根中
+%{__install} -p -D -m 0755 %{SOURCE2} %{buildroot}/etc/rc.d/init.d/nginx //复制SOURCE2中的文件到虚拟根中
+%{__install} -p -D -m 0644 %{SOURCE3} %{buildroot}%{_prefix}/conf/nginx.logrotate //复制SOURCE3中的文件到虚拟根中%pre                                //安装前准备操作
+if [ $1 == 1 ]; then                // 这里的1为安装；0为卸载/usr/sbin/useradd -r nginx -s /sbin/nologin 2> /dev/null
+fi%post                               //安装后准备操作
+if [ $1 == 1 ]; thenecho "export PATH=/usr/local/nginx/sbin:$PATH" >> /etc/profilesource /etc/profilecp %{_prefix}/conf/nginx.logrotate /etc/logrotate.d/nginx
+fi%preun                              //卸载前准备操作
+if [ $1 == 0 ]; then/etc/init.d/nginx stop 2>&1 /dev/null/usr/sbin/userdel -r nginx 2> /dev/null
+fi%postun
+if [ $1 == 0 ]; then                //卸载后准备操作rm -f /etc/logrotate.d/nginx
+fi%clean
+rm -rf %{buildroot}%files                              //定义rpm包安装时创建的相关目录及文件。在该选项中%defattr (-,root,root)一定要注意。它是指定安装文件的属性，分别是(mode,owner,group)，-表示默认值，对文本文件是0644，可执行文件是0755。
+%defattr(-,root,root,0755)
+%{_prefix}
+%dir /var/log/weblog
+%attr(644,root,root) %{_prefix}/conf/nginx.conf
+%attr(755,root,root) /etc/rc.d/init.d/nginx
+%changelog

@@ -1,6 +1,69 @@
+以下为目录所对应存放文件的解释：
+
+BUILD：源码解压以后放的目录
+RPMS：制作完成后的rpm包存放目录
+SOURCES：存放源文件，配置文件，补丁文件等放置的目录【常用】
+SPECS：存放spec文件，作为制作rpm包的文件，即：nginx.spec……【常用】
+SRPMS：src格式的rpm包目录
+BuiltRoot：虚拟安装目录，即在整个install的过程中临时安装到这个目录，把这个目录当作根来用的，所以在这个目录下的文件，才是真正的目录文件。最终，Spec文件中最后有清理阶段，这个目录中的内容将被删除
+
+Spec文件的宏定义：
+
+rpmbuild --showrc | grep topdir #工作车间目录：_topdir /root/rpmbuild
+-14: _builddir %{_topdir}/BUILD
+-14: _buildrootdir %{_topdir}/BUILDROOT
+-14: _rpmdir %{_topdir}/RPMS
+-14: _sourcedir %{_topdir}/SOURCES
+-14: _specdir %{_topdir}/SPECS
+-14: _srcrpmdir %{_topdir}/SRPMS
+-14: _topdir /root/rpmbuild
+
+rpmbuild --showrc显示所有的宏，以下划线开头：
+
+一个下划线：定义环境的使用情况，
+二个下划线：通常定义的是命令，
+为什么要定义宏，因为不同的系统，命令的存放位置可能不同，所以通过宏的定义找到命令的真正存放位置
+ 
+1.2 理解Spec脚本中各个变量
+rpm的配置文档还算是比较有调理性的，按照标准的格式整理一些信息，包括：软件基础信息，以及安装、卸载前后执行的脚本，对源码包解压、打补丁、编译，安装路径和文件引用等,其中需要注意的地方为：虚拟路径的位置，以及宏的定义。
+ 
+spec脚本包括很多关键字，主要有：
+
+Name: 软件包的名称，在后面的变量中即可使用%{name}的方式引用
+Summary: 软件包的内容
+Version: 软件的实际版本号，例如：1.12.1等，后面可使用%{version}引用
+Release: 发布序列号，例如：1%{?dist}，标明第几次打包，后面可使用%{release}引用
+Group: 软件分组，建议使用：Applications/System
+License: 软件授权方式GPLv2
+Source: 源码包，可以带多个用Source1、Source2等源，后面也可以用%{source1}、%{source2}引用
+BuildRoot: 这个是安装或编译时使用的临时目录，即模拟安装完以后生成的文件目录：%_topdir/BUILDROOT 后面可使用$RPM_BUILD_ROOT 方式引用。
+URL: 软件的URI
+Vendor: 打包组织或者人员
+Patch: 补丁源码，可使用Patch1、Patch2等标识多个补丁，使用%patch0或%{patch0}引用
+Prefix: %{_prefix} 这个主要是为了解决今后安装rpm包时，并不一定把软件安装到rpm中打包的目录的情况。这样，必须在这里定义该标识，并在编写%install脚本的时候引用，才能实现rpm安装时重新指定位置的功能
+Prefix: %{_sysconfdir} 这个原因和上面的一样，但由于%{_prefix}指/usr，而对于其他的文件，例如/etc下的配置文件，则需要用%{_sysconfdir}标识
+Requires: 该rpm包所依赖的软件包名称，可以用>=或<=表示大于或小于某一特定版本，例如：
+libxxx-devel >= 1.1.1 openssl-devel 。 注意：“>=”号两边需用空格隔开，而不同软件名称也用空格分开
+
+%description: 软件的详细说明
+%define: 预定义的变量，例如定义日志路径: _logpath /var/log/weblog
+%prep: 预备参数，通常为 %setup -q
+%build: 编译参数 ./configure --user=nginx --group=nginx --prefix=/usr/local/nginx/……
+%install: 安装步骤,此时需要指定安装路径，创建编译时自动生成目录，复制配置文件至所对应的目录中（这一步比较重要！）
+%pre: 安装前需要做的任务，如：创建用户
+%post: 安装后需要做的任务 如：自动启动的任务
+%preun: 卸载前需要做的任务 如：停止任务
+%postun: 卸载后需要做的任务 如：删除用户，删除/备份业务数据
+%clean: 清除上次编译生成的临时文件，就是上文提到的虚拟目录
+%files: 设置文件属性，包含编译文件需要生成的目录、文件以及分配所对应的权限
+%changelog: 修改历史
+
+
+
+
 cat nginx.spec
-%define _prefix /usr/local/nginx    //Ԥ�����prefixĿ¼
-%define _logpath /var/log/weblog    //Ԥ������־Ŀ¼
+%define _prefix /usr/local/nginx    //预定义的prefix目录
+%define _logpath /var/log/weblog    //预定义日志目录
 Name: nginx 
 Version: 1.12.1
 Release: 1%{?dist}
@@ -10,31 +73,31 @@ License: GPLv2
 URL: https://nginx.org
 Packager: Atlantis <XXX@XXX.com>
 Vendor: XXX-XXX
-Source0: %{name}-%{version}.tar.gz  //���õ�Դ���ļ�
-Source1: nginx.conf                 //���������ļ�
-Source2: nginx                      //����System-V����Service����
-Source3: nginx.logrotate            //������־��ת�������ļ�
-BuildRoot: %_topdir/BUILDROOT       //�����Ŀ¼
-Requires: libxslt-devel,openssl-devel,pcre-devel    //��������������%description
-NGINX is the heart of the modern web, powering half of the world��s busiest sites and applications. The company's comprehensive application delivery platform combines load balancing, content caching, web serving, security controls, and monitoring in one easy-to-use software package.%prep                               //����ǰ׼������������ָ���ľ���Setup,������Ҳ����ָ��������
-%setup -q%build                              //����������������������˻���������ûɶ���ģ����һ����������ʹ�ò��б���: make -j 6
+Source0: %{name}-%{version}.tar.gz  //引用的源码文件
+Source1: nginx.conf                 //引用配置文件
+Source2: nginx                      //引用System-V风格的Service服务
+Source3: nginx.logrotate            //引用日志轮转的配置文件
+BuildRoot: %_topdir/BUILDROOT       //虚拟根目录
+Requires: libxslt-devel,openssl-devel,pcre-devel    //所依赖的软件包%description
+NGINX is the heart of the modern web, powering half of the world’s busiest sites and applications. The company's comprehensive application delivery platform combines load balancing, content caching, web serving, security controls, and monitoring in one easy-to-use software package.%prep                               //编译前准备工作，这里指定的就是Setup,有条件也可以指定编译器
+%setup -q%build                              //编译参数，这个看到这里的人基本都懂，没啥讲的，最后一个参数可以使用并行编译: make -j 6
 ./configure \--user=nginx \--group=nginx \--prefix=%{_prefix} \--http-log-path=%{_logpath}/access.log \--error-log-path=%{_logpath}/error.log \--pid-path=/var/run/nginx.pid \--with-http_dav_module \--with-http_flv_module \--with-http_realip_module \--with-http_addition_module \--with-http_xslt_module \--with-http_sub_module \--with-http_random_index_module \--with-http_degradation_module \--with-http_secure_link_module \--with-http_gzip_static_module \--with-http_ssl_module \--with-http_stub_status_module \--with-pcre \--with-threads \--with-stream \--with-ld-opt=-Wl,-E
-make %{?_smp_mflags}%install                            //��װ����
-rm -rf %{buildroot}                 //��֤������ĸɾ�
-make install DESTDIR=%{buildroot}   //install �������
-%{__install} -p -d -m 0755 %{buildroot}%{_logpath}  //����һ����־Ŀ¼��������Ȩ�ޣ�����ļ����ڱ���ʱ�Զ����ɣ����Ҫ����
-%{__install} -p -D -m 0644 %{SOURCE1} %{buildroot}%{_prefix}/conf/nginx.conf //����SOURCE1�е��ļ����������
-%{__install} -p -D -m 0755 %{SOURCE2} %{buildroot}/etc/rc.d/init.d/nginx //����SOURCE2�е��ļ����������
-%{__install} -p -D -m 0644 %{SOURCE3} %{buildroot}%{_prefix}/conf/nginx.logrotate //����SOURCE3�е��ļ����������%pre                                //��װǰ׼������
-if [ $1 == 1 ]; then                // �����1Ϊ��װ��0Ϊж��/usr/sbin/useradd -r nginx -s /sbin/nologin 2> /dev/null
-fi%post                               //��װ��׼������
+make %{?_smp_mflags}%install                            //安装步骤
+rm -rf %{buildroot}                 //保证虚拟根的干净
+make install DESTDIR=%{buildroot}   //install 到虚拟根
+%{__install} -p -d -m 0755 %{buildroot}%{_logpath}  //定义一个日志目录并赋予其权限，这个文件会在编译时自动生成，因此要声明
+%{__install} -p -D -m 0644 %{SOURCE1} %{buildroot}%{_prefix}/conf/nginx.conf //复制SOURCE1中的文件到虚拟根中
+%{__install} -p -D -m 0755 %{SOURCE2} %{buildroot}/etc/rc.d/init.d/nginx //复制SOURCE2中的文件到虚拟根中
+%{__install} -p -D -m 0644 %{SOURCE3} %{buildroot}%{_prefix}/conf/nginx.logrotate //复制SOURCE3中的文件到虚拟根中%pre                                //安装前准备操作
+if [ $1 == 1 ]; then                // 这里的1为安装；0为卸载/usr/sbin/useradd -r nginx -s /sbin/nologin 2> /dev/null
+fi%post                               //安装后准备操作
 if [ $1 == 1 ]; thenecho "export PATH=/usr/local/nginx/sbin:$PATH" >> /etc/profilesource /etc/profilecp %{_prefix}/conf/nginx.logrotate /etc/logrotate.d/nginx
-fi%preun                              //ж��ǰ׼������
+fi%preun                              //卸载前准备操作
 if [ $1 == 0 ]; then/etc/init.d/nginx stop 2>&1 /dev/null/usr/sbin/userdel -r nginx 2> /dev/null
 fi%postun
-if [ $1 == 0 ]; then                //ж�غ�׼������rm -f /etc/logrotate.d/nginx
+if [ $1 == 0 ]; then                //卸载后准备操作rm -f /etc/logrotate.d/nginx
 fi%clean
-rm -rf %{buildroot}%files                              //����rpm����װʱ���������Ŀ¼���ļ����ڸ�ѡ����%defattr (-,root,root)һ��Ҫע�⡣����ָ����װ�ļ������ԣ��ֱ���(mode,owner,group)��-��ʾĬ��ֵ�����ı��ļ���0644����ִ���ļ���0755��
+rm -rf %{buildroot}%files                              //定义rpm包安装时创建的相关目录及文件。在该选项中%defattr (-,root,root)一定要注意。它是指定安装文件的属性，分别是(mode,owner,group)，-表示默认值，对文本文件是0644，可执行文件是0755。
 %defattr(-,root,root,0755)
 %{_prefix}
 %dir /var/log/weblog

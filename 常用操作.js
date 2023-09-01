@@ -26,4 +26,13 @@ swapon -a
 //版本之间升级主要看3大件版本
 kernel， glibc， systemd
 
+cat /etc/ansible/ansible.cfg
+become=True
+become_method=su
+become_user=root
+
+cat /etc/ansible/hosts
+x.x.x.x  ansible_ssh_user=xxx  ansible_ssh_paas=xxx  ansible_become_paas=xxxx
+
+
 

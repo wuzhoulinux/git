@@ -34,5 +34,9 @@ become_user=root
 cat /etc/ansible/hosts
 x.x.x.x  ansible_ssh_user=xxx  ansible_ssh_paas=xxx  ansible_become_paas=xxxx
 
-
+//刷新文件系统（磁盘修复）
+ext4
+fsck -y /dev/文件系统路径
+xfs
+xfs_repair -L /dev/文件系统路径
 

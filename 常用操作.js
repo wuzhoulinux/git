@@ -40,3 +40,5 @@ fsck -y /dev/文件系统路径
 xfs
 xfs_repair -L /dev/文件系统路径
 
+//添加kubectl自动补齐
+echo "source <(kubectl completion bash)" >> ~/.bashrc

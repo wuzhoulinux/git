@@ -42,3 +42,7 @@ xfs_repair -L /dev/文件系统路径
 
 //添加kubectl自动补齐
 echo "source <(kubectl completion bash)" >> ~/.bashrc
+
+
+//iperf3是一个TCP,UDP,SCTP网络带宽测量工具，，是用于主动测量IP网络上可达到的最大带宽工具， 支持调整与时序，协议和缓冲区有关的各种参数，对于每个测试，他都会报告测得吞吐量/比特率，损耗和其他阐述
+iperf3 -c x.x.x.x  -i 1 -t 5 -p 5201

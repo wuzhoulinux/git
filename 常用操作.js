@@ -50,3 +50,8 @@ iperf3 -c x.x.x.x  -i 1 -t 5 -p 5201
 
 //openssh
 https://cdn.openbsd.org/pub/OpenBSD/OpenSSH/portable/openssh-9.6p1.tar.gz
+
+//ext4文件系统上删除文件，可以恢复: extundelete ，ext3恢复使用：ext3grep
+windows恢复误删除的文件：  final data v2.0 汉化版  和  easyrecovery
+参考链接：https://www.27ka.cn/362087.html
+        https://blog.csdn.net/yaxuan88521/article/details/127890871

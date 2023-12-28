@@ -73,3 +73,8 @@ chroot /sysroot    //如果直接rw init=/bin/bash,默认进的就是/sysroot
 修改root密码  passwd  root
 创建.autorelable 
 touch /.autorelable
+
+//释放cache
+sync 同步内存数据到磁盘中
+echo '3' > /proc/sys/vm/drop_caches 清理buff,cache（没被进程占用的部分）
+

@@ -65,3 +65,11 @@ https://cdn.openbsd.org/pub/OpenBSD/OpenSSH/portable/openssh-9.6p1.tar.gz
 windows恢复误删除的文件：  final data v2.0 汉化版  和  easyrecovery
 参考链接：https://www.27ka.cn/362087.html
         https://blog.csdn.net/yaxuan88521/article/details/127890871
+
+//单用户
+//预挂载模式rd.break
+rw rd.break 
+chroot /sysroot    //如果直接rw init=/bin/bash,默认进的就是/sysroot
+修改root密码  passwd  root
+创建.autorelable 
+touch /.autorelable

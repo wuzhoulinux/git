@@ -18,6 +18,16 @@ blkid //查看分区使用文件系统类型
 resize2fs /dev/datavg01/lv01
 
 
+//测试磁盘的io写速度  dd if=/dev/zero of=test.dbf bs=8k count=3000000, 如果要测试实际速度，还需要在末尾加上oflag=direct测到的才是真实IO速度，
+//if是源文件，of是目标文件，搞反了目标文件就覆盖了
+dd if=/dev/zero of=test2021.txt bs=4k count=1000 oflag=direct
+dd if=/dev/zero of=test2021.txt bs=8k count=1000 oflag=direct
+dd if=/dev/zero of=test2021.txt bs=1M count=1000 oflag=direct
+//测试磁盘的io读速度
+dd if=test2021.txt of=/dev/null bs=8k count=1000
+dd if=test2021.txt of=/dev/null bs=4k count=1000
+dd if=test2021.txt of=/dev/null bs=1M count=1000
+
 //关闭swap分区
 swapoff -a
 //打开swap分区

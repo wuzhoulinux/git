@@ -1,0 +1,19 @@
+//sed常规用法
+//匹配到指定字符串的行，然后替换其中某个字符串
+sed -i '/匹配词/ s/替换前字符串/替换后字符串/g'
+//匹配到字符串行，然后整行替换
+sed -i '/^MACs/c MACs shmac-sha2-512' /etc/ssh/sshd_config  //匹配以MACs开头的字符，然后将整行替换成MACs shamac-sha2-512
+//在匹配到指定字符串的上下行添加内容
+  //在匹配字符串的前一行加内容
+  sed -i '/匹配字符串/i 要加入的内容' example.file
+  sed -i '/www.baidu.com/i www.qq.com' domain.file
+  //在匹配字符串的后一行加内容
+  sed -i '/匹配字符串/a 要加入的内容' example.file
+  sed -i '/www.baidu.com/a www.qq.com' domain.file
+//指定的行号前后加
+sed -i '64 i 加入内容' file.name
+sed -i '64 a 加入内容' file.name
+
+//只替换第一次匹配到的字符串行
+sed -i '0,/匹配词/ s/替换前字符串/替换后字符串/g' file.name
+

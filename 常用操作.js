@@ -149,6 +149,14 @@ iptables -t nat -A POSTROUTING  -p tcp -d 目标主机IP --dport 目标端口 -j
 # grub2-set-default '内核'  //设置启动使用内核
 # grub2-edienv list //查看
 
+//ps 排序线程中cpu使用率前五的java线程
+for i in `ps -ef|grep java|grep -v grep |awk '{print $2}'`;do echo "java process is $i" >>xx.log ;echo -e "`ps -mp $i -o THREAD,tid,time|sort -rnk2|head -n 5`\n" >>xx.log;done
+
+//查看java进程中的县城数有多少个
+ps 查找线程数量最大的java线程
+for i in `ps -ef|grep java|grep -v grep|awk '{print $2}'`;do echo "java process is $i,number of thread is `ps -mp $i -o THREAD,tid,time|wc -l`" >>yy.log;done
+
+
 //yum 仅下载
 # yumdownloader --downloadonly rpm包
 

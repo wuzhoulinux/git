@@ -148,3 +148,6 @@ iptables -t nat -A POSTROUTING  -p tcp -d 目标主机IP --dport 目标端口 -j
 # cat /boot/grub2/grub.cfg |grep menuentry //查看系统可用内核
 # grub2-set-default '内核'  //设置启动使用内核
 # grub2-edienv list //查看
+
+//yum 仅下载
+# yumdownloader --downloadonly rpm包

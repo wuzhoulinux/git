@@ -151,3 +151,4 @@ iptables -t nat -A POSTROUTING  -p tcp -d 目标主机IP --dport 目标端口 -j
 
 //yum 仅下载
 # yumdownloader --downloadonly rpm包
+

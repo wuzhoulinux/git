@@ -1,4 +1,25 @@
+文件权限备份
+[root@node102 ~]# getfacl  -pR /opt > 1.bak   //备份opt目录下的所有文件权限，-p  绝对路径， -R 递归；  如果不加-p 就是相对路径
+[root@node102 ~]# head 1.bak
+# file: /opt
+# owner: root
+# group: root
+user::rwx
+group::r-x
+other::r-x
+# file: /opt/containerd
+# owner: root
+# group: root
+[root@node102 ~]# ll -ld /opt
+drwxr-xr-x. 6 root root 58 1月  18 15:24 /opt
+[root@node102 ~]# chmod 000 /opt
+[root@node102 ~]# ll -ld /opt
+d---------. 6 root root 58 1月  18 15:24 /opt
+[root@node102 ~]# setfacl --restor=1.bak    //还原备份权限
+[root@node102 ~]# ll -ld /opt/
+drwxr-xr-x. 6 root root 58 1月  18 15:24 /opt/
 
+ 
 // 新增的磁盘/dev/vde可以直接加到vg中，然后直接扩容到lv中
 vgextend vg01 /dev/vde
 lvextend -l 100%free /dev/vg01/lv01

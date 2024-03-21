@@ -19,8 +19,26 @@ d---------. 6 root root 58 1月  18 15:24 /opt
 [root@node102 ~]# ll -ld /opt/
 drwxr-xr-x. 6 root root 58 1月  18 15:24 /opt/
 
- 
-// 新增的磁盘/dev/vde可以直接加到vg中，然后直接扩容到lv中
+创建lvm过程 
+物理卷pv--卷组vg--逻辑卷lv
+创建物理卷
+pvcreate  /dev/sdb
+如果没有卷组，创建卷组；
+vgcreate vg01 /dev/sdb
+加入卷组，如果以及有卷组了，可以直接加入
+vgextend vg01 /dev/sdb
+创建逻辑卷
+lvcreate  -L 100M lv01 vg01
+格式化mkfs.xfs ，mkfs.ext4
+mkfs.xfs /dev/sdb/lv01  //格式化xfs格式
+已经有逻辑卷了，给逻辑卷扩容
+lvextend -l 100%free /dev/sdb1/lv01
+刷新格式
+xfs_growfs /dev/sdb1/lv01   xfs格式
+resize2fs  /dev/sdb1/lv01   ext4格式
+
+
+// 新增的磁盘/dev/vde可以直接加到卷组vg中，然后直接扩容到lv中
 vgextend vg01 /dev/vde
 lvextend -l 100%free /dev/vg01/lv01
 // xfs 刷新格式
